@@ -1,0 +1,415 @@
+<body>
+  <h1>Isometric CSS Transform Generator</h1>
+  
+  <div class="container">
+    <div class="controls">
+      <h2>Controls</h2>
+      
+      <div class="form-group">
+        <label for="scale">Scale:</label>
+        <div class="slider-container">
+          <input type="range" id="scale" min="0.1" max="3" step="0.1" value="1">
+          <input type="number" id="scale-value" min="0.1" max="3" step="0.1" value="1">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="rotateX">Rotate X:</label>
+        <div class="slider-container">
+          <input type="range" id="rotateX" min="-180" max="180" step="1" value="35">
+          <input type="number" id="rotateX-value" min="-180" max="180" step="1" value="35">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="rotateY">Rotate Y:</label>
+        <div class="slider-container">
+          <input type="range" id="rotateY" min="-180" max="180" step="1" value="45">
+          <input type="number" id="rotateY-value" min="-180" max="180" step="1" value="45">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="rotateZ">Rotate Z:</label>
+        <div class="slider-container">
+          <input type="range" id="rotateZ" min="-180" max="180" step="1" value="0">
+          <input type="number" id="rotateZ-value" min="-180" max="180" step="1" value="0">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="translateX">Translate X:</label>
+        <div class="slider-container">
+          <input type="range" id="translateX" min="-100" max="100" step="1" value="0">
+          <input type="number" id="translateX-value" min="-100" max="100" step="1" value="0">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="translateY">Translate Y:</label>
+        <div class="slider-container">
+          <input type="range" id="translateY" min="-100" max="100" step="1" value="0">
+          <input type="number" id="translateY-value" min="-100" max="100" step="1" value="0">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="translateZ">Translate Z:</label>
+        <div class="slider-container">
+          <input type="range" id="translateZ" min="-100" max="100" step="1" value="0">
+          <input type="number" id="translateZ-value" min="-100" max="100" step="1" value="0">
+        </div>
+      </div>
+      
+      <div class="view-toggle">
+        <button id="toggle-cube">Toggle Cube/Square View</button>
+      </div>
+      
+      <div class="presets">
+        <h3>Presets</h3>
+        <button id="preset-isometric">Classic Isometric</button>
+        <button id="preset-dimetric">Dimetric</button>
+        <button id="preset-cabinet">Cabinet</button>
+        <button id="preset-reset">Reset</button>
+      </div>
+      
+      <div class="output">
+        <h3>CSS Output</h3>
+        <div class="code" id="matrix3d-output">transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);</div>
+        <button class="copy-button" id="copy-css">Copy CSS</button>
+      </div>
+    </div>
+    
+    <div class="preview">
+      <h2>Preview</h2>
+      <div class="preview-container">
+        <div class="square" id="preview-square"></div>
+        <!-- 3D Cube for better visualization -->
+        <div class="cube" id="preview-cube">
+          <div class="cube-face front">Front</div>
+          <div class="cube-face back">Back</div>
+          <div class="cube-face right">Right</div>
+          <div class="cube-face left">Left</div>
+          <div class="cube-face top">Top</div>
+          <div class="cube-face bottom">Bottom</div>
+        </div>
+        <div class="axes">
+          <div class="axis x"></div>
+          <div class="axis y"></div>
+          <div class="axis z"></div>
+        </div>
+      </div>
+      <div class="info-panel">
+        <p>Red = X axis, Green = Y axis, Blue = Z axis</p>
+        <p>For true isometric projection, X and Z axes should make 30° angles with the horizontal.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Helper function to convert degrees to radians
+    function toRadians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+    
+    // Helper function to multiply two matrices
+    function multiplyMatrices(a, b) {
+      const result = new Array(16).fill(0);
+      
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          for (let k = 0; k < 4; k++) {
+            result[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
+          }
+        }
+      }
+      
+      return result;
+    }
+    
+    // Function to create a scaling matrix
+    function createScaleMatrix(scale) {
+      return [
+        scale, 0, 0, 0,
+        0, scale, 0, 0,
+        0, 0, scale, 0,
+        0, 0, 0, 1
+      ];
+    }
+    
+    // Function to create a translation matrix
+    function createTranslationMatrix(tx, ty, tz) {
+      return [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        tx, ty, tz, 1
+      ];
+    }
+    
+    // Function to create a rotation matrix around X axis
+    function createRotationXMatrix(degrees) {
+      const radians = toRadians(degrees);
+      const cos = Math.cos(radians);
+      const sin = Math.sin(radians);
+      
+      return [
+        1, 0, 0, 0,
+        0, cos, sin, 0,
+        0, -sin, cos, 0,
+        0, 0, 0, 1
+      ];
+    }
+    
+    // Function to create a rotation matrix around Y axis
+    function createRotationYMatrix(degrees) {
+      const radians = toRadians(degrees);
+      const cos = Math.cos(radians);
+      const sin = Math.sin(radians);
+      
+      return [
+        cos, 0, -sin, 0,
+        0, 1, 0, 0,
+        sin, 0, cos, 0,
+        0, 0, 0, 1
+      ];
+    }
+    
+    // Function to create a rotation matrix around Z axis
+    function createRotationZMatrix(degrees) {
+      const radians = toRadians(degrees);
+      const cos = Math.cos(radians);
+      const sin = Math.sin(radians);
+      
+      return [
+        cos, sin, 0, 0,
+        -sin, cos, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ];
+    }
+    
+    // Function to format the matrix for CSS output
+    function formatMatrix(matrix) {
+      return `transform: matrix3d(${matrix.map(n => n.toFixed(6)).join(', ')});`;
+    }
+    
+    // Global variable to keep track of cube/square view
+    let showCube = true;
+    
+    // Function to update the transformation
+    function updateTransform() {
+      // Get all the values
+      const scale = parseFloat(document.getElementById('scale-value').value);
+      const rotateX = parseFloat(document.getElementById('rotateX-value').value);
+      const rotateY = parseFloat(document.getElementById('rotateY-value').value);
+      const rotateZ = parseFloat(document.getElementById('rotateZ-value').value);
+      const translateX = parseFloat(document.getElementById('translateX-value').value);
+      const translateY = parseFloat(document.getElementById('translateY-value').value);
+      const translateZ = parseFloat(document.getElementById('translateZ-value').value);
+      
+      // Create individual transformation matrices
+      const scaleMatrix = createScaleMatrix(scale);
+      const rotateXMatrix = createRotationXMatrix(rotateX);
+      const rotateYMatrix = createRotationYMatrix(rotateY);
+      const rotateZMatrix = createRotationZMatrix(rotateZ);
+      const translateMatrix = createTranslationMatrix(translateX, translateY, translateZ);
+      
+      // Combine all matrices (order matters)
+      // The transformation order is: scale -> rotateX -> rotateY -> rotateZ -> translate
+      let resultMatrix = scaleMatrix;
+      resultMatrix = multiplyMatrices(resultMatrix, rotateXMatrix);
+      resultMatrix = multiplyMatrices(resultMatrix, rotateYMatrix);
+      resultMatrix = multiplyMatrices(resultMatrix, rotateZMatrix);
+      resultMatrix = multiplyMatrices(resultMatrix, translateMatrix);
+      
+      // Update the CSS output
+      const matrixOutput = formatMatrix(resultMatrix);
+      document.getElementById('matrix3d-output').textContent = matrixOutput;
+      
+      // Apply to the preview square and cube
+      const cssTransform = matrixOutput.split(': ')[1];
+      document.getElementById('preview-square').style.transform = cssTransform;
+      document.getElementById('preview-cube').style.transform = cssTransform;
+      
+      // Update the axes
+      updateAxes(rotateX, rotateY, rotateZ);
+    }
+    
+    // Function to update the coordinate axes
+    function updateAxes(rotateX, rotateY, rotateZ) {
+      const xAxis = document.querySelector('.axis.x');
+      const yAxis = document.querySelector('.axis.y');
+      const zAxis = document.querySelector('.axis.z');
+      
+      // Create rotation matrices
+      const rotateXMatrix = createRotationXMatrix(rotateX);
+      const rotateYMatrix = createRotationYMatrix(rotateY);
+      const rotateZMatrix = createRotationZMatrix(rotateZ);
+      
+      // Combine rotation matrices
+      let rotationMatrix = rotateXMatrix;
+      rotationMatrix = multiplyMatrices(rotationMatrix, rotateYMatrix);
+      rotationMatrix = multiplyMatrices(rotationMatrix, rotateZMatrix);
+      
+      // Original axis vectors (pointing right, down, toward viewer)
+      const xAxisVector = [1, 0, 0, 1];
+      const yAxisVector = [0, 1, 0, 1];
+      const zAxisVector = [0, 0, 1, 1];
+      
+      // Transform the axis vectors
+      const transformedXAxis = transformVector(xAxisVector, rotationMatrix);
+      const transformedYAxis = transformVector(yAxisVector, rotationMatrix);
+      const transformedZAxis = transformVector(zAxisVector, rotationMatrix);
+      
+      // Apply transforms to the axis elements
+      xAxis.style.transform = `rotate(${Math.atan2(transformedXAxis[1], transformedXAxis[0]) * 180 / Math.PI}deg)`;
+      yAxis.style.transform = `rotate(${Math.atan2(transformedYAxis[1], transformedYAxis[0]) * 180 / Math.PI}deg)`;
+      zAxis.style.transform = `rotate(${Math.atan2(transformedZAxis[1], transformedZAxis[0]) * 180 / Math.PI}deg)`;
+    }
+    
+    // Function to transform a vector with a matrix
+    function transformVector(vector, matrix) {
+      const result = [0, 0, 0, 0];
+      
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          result[i] += vector[j] * matrix[j * 4 + i];
+        }
+      }
+      
+      return result;
+    }
+    
+    // Toggle between cube and square view
+    function toggleCubeView() {
+      const cube = document.getElementById('preview-cube');
+      const square = document.getElementById('preview-square');
+      
+      showCube = !showCube;
+      
+      if (showCube) {
+        cube.style.display = 'block';
+        square.style.display = 'none';
+      } else {
+        cube.style.display = 'none';
+        square.style.display = 'block';
+      }
+    }
+    
+    // Initialize all controls
+    function initializeControls() {
+      // Set up input synchronization
+      const rangeInputs = document.querySelectorAll('input[type="range"]');
+      
+      rangeInputs.forEach(input => {
+        const numInput = document.getElementById(`${input.id}-value`);
+        
+        // Event listeners for range inputs
+        input.addEventListener('input', function() {
+          numInput.value = input.value;
+          updateTransform();
+        });
+        
+        // Event listeners for number inputs
+        numInput.addEventListener('input', function() {
+          input.value = numInput.value;
+          updateTransform();
+        });
+      });
+      
+      // Toggle cube/square view
+      document.getElementById('toggle-cube').addEventListener('click', toggleCubeView);
+      
+      // Set up presets
+      document.getElementById('preset-isometric').addEventListener('click', function() {
+        document.getElementById('rotateX-value').value = 35.264;
+        document.getElementById('rotateX').value = 35.264;
+        document.getElementById('rotateY-value').value = 45;
+        document.getElementById('rotateY').value = 45;
+        document.getElementById('rotateZ-value').value = 0;
+        document.getElementById('rotateZ').value = 0;
+        updateTransform();
+      });
+      
+      document.getElementById('preset-dimetric').addEventListener('click', function() {
+        document.getElementById('rotateX-value').value = 30;
+        document.getElementById('rotateX').value = 30;
+        document.getElementById('rotateY-value').value = 45;
+        document.getElementById('rotateY').value = 45;
+        document.getElementById('rotateZ-value').value = 0;
+        document.getElementById('rotateZ').value = 0;
+        updateTransform();
+      });
+      
+      document.getElementById('preset-cabinet').addEventListener('click', function() {
+        document.getElementById('rotateX-value').value = 0;
+        document.getElementById('rotateX').value = 0;
+        document.getElementById('rotateY-value').value = 45;
+        document.getElementById('rotateY').value = 45;
+        document.getElementById('rotateZ-value').value = 0;
+        document.getElementById('rotateZ').value = 0;
+        updateTransform();
+      });
+      
+      document.getElementById('preset-reset').addEventListener('click', function() {
+        document.getElementById('scale-value').value = 1;
+        document.getElementById('scale').value = 1;
+        document.getElementById('rotateX-value').value = 0;
+        document.getElementById('rotateX').value = 0;
+        document.getElementById('rotateY-value').value = 0;
+        document.getElementById('rotateY').value = 0;
+        document.getElementById('rotateZ-value').value = 0;
+        document.getElementById('rotateZ').value = 0;
+        document.getElementById('translateX-value').value = 0;
+        document.getElementById('translateX').value = 0;
+        document.getElementById('translateY-value').value = 0;
+        document.getElementById('translateY').value = 0;
+        document.getElementById('translateZ-value').value = 0;
+        document.getElementById('translateZ').value = 0;
+        updateTransform();
+      });
+      
+      // Copy CSS button
+      document.getElementById('copy-css').addEventListener('click', function() {
+        const cssText = document.getElementById('matrix3d-output').textContent;
+        navigator.clipboard.writeText(cssText)
+          .then(() => {
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+              this.textContent = 'Copy CSS';
+            }, 2000);
+          })
+          .catch(err => {
+            console.error('Could not copy text: ', err);
+          });
+      });
+      
+      // Show cube by default, hide square
+      document.getElementById('preview-square').style.display = 'none';
+      document.getElementById('preview-cube').style.display = 'block';
+      
+      // Initial update to ensure preview is shown
+      updateTransform();
+    }
+    
+    // Run initialization when DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeControls();
+      // Set the classic isometric projection as default
+      setTimeout(function() {
+        document.getElementById('preset-isometric').click();
+      }, 100);
+    });
+    
+    // If DOM is already loaded, initialize immediately
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+      initializeControls();
+      // Set the classic isometric projection as default
+      setTimeout(function() {
+        document.getElementById('preset-isometric').click();
+      }, 100);
+    }
+  </script>
+</body>
+</html>

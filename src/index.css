@@ -1,0 +1,229 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #333;
+  background-color: #f7f9fc;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2563eb;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.controls {
+  flex: 1;
+  min-width: 300px;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.preview {
+  flex: 1;
+  min-width: 300px;
+  min-height: 400px;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.preview-container {
+  width: 100%;
+  height: 300px;
+  background-color: #f0f4f8;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+  perspective-origin: center;
+  border: 1px solid #e0e7ff;
+}
+
+.square {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  left: calc(50% - 40px);
+  top: calc(50% - 40px);
+  background-color: #3b82f6;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Create isometric cube sides */
+.cube {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  left: calc(50% - 40px);
+  top: calc(50% - 40px);
+  transform-style: preserve-3d;
+}
+
+.cube-face {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  backface-visibility: visible;
+}
+
+.front {
+  background-color: #3b82f6;
+  transform: translateZ(40px);
+}
+
+.back {
+  background-color: #2563eb;
+  transform: translateZ(-40px) rotateY(180deg);
+}
+
+.right {
+  background-color: #60a5fa;
+  transform: translateX(40px) rotateY(90deg);
+}
+
+.left {
+  background-color: #1d4ed8;
+  transform: translateX(-40px) rotateY(-90deg);
+}
+
+.top {
+  background-color: #93c5fd;
+  transform: translateY(-40px) rotateX(90deg);
+}
+
+.bottom {
+  background-color: #1e40af;
+  transform: translateY(40px) rotateX(-90deg);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type="range"] {
+  flex: 1;
+}
+
+input[type="number"] {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.output {
+  margin-top: 24px;
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+.code {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.presets {
+  margin-top: 20px;
+}
+
+button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #1d4ed8;
+}
+
+.copy-button {
+  background-color: #10b981;
+  margin-top: 10px;
+}
+
+.copy-button:hover {
+  background-color: #059669;
+}
+
+.axes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.axis {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 2px;
+  transform-origin: left center;
+}
+
+.axis.x {
+  background-color: #ef4444;
+}
+
+.axis.y {
+  background-color: #22c55e;
+}
+
+.axis.z {
+  background-color: #3b82f6;
+}
+
+.info-panel {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.view-toggle {
+  margin-bottom: 10px;
+}
